@@ -5,7 +5,7 @@ F1 Pulse is a Next.js App Router web experience for Formula 1 fans, featuring:
 - Neon dark-mode motorsport visual language
 - Live data cards (latest GP and next race countdown)
 - Driver standings + head-to-head comparison tool
-- Visual car builder with local persistence and simulation stats
+- Visual car builder with a 360-degree 3D F1 car viewer, local persistence, and simulation stats
 - Season calendar + interactive team portals
 - Resilient live data strategy with season fallback and mock data
 

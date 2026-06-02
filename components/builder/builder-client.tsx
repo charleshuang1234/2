@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
 import { simulateCar } from "@/lib/builder/simulate-car";
-import { BuilderConfig, BuilderStats } from "@/lib/types";
+import type { BuilderConfig, BuilderStats } from "@/lib/types";
 import { useAdaptiveMotion } from "@/components/hooks/use-adaptive-motion";
+import { CarSceneLoader } from "@/components/builder/car-scene-loader";
 
 const STORAGE_KEY = "f1-pulse-builder-config";
 const defaultConfig: BuilderConfig = {
@@ -12,12 +12,6 @@ const defaultConfig: BuilderConfig = {
   powerUnit: "mercedes",
   aeroPackage: "balanced"
 };
-
-function colorClass(color: BuilderConfig["liveryColor"]) {
-  if (color === "neonRed") return "from-neon-red/80 to-neon-red/20 shadow-neonRed";
-  if (color === "signalGold") return "from-signal-gold/80 to-signal-gold/20";
-  return "from-electric-blue/80 to-electric-blue/20 shadow-neonBlue";
-}
 
 function StatRow({ label, value, suffix = "" }: { label: string; value: number; suffix?: string }) {
   const max = label === "Top Speed" ? 360 : 100;
@@ -115,22 +109,7 @@ export function BuilderClient() {
             </label>
           </div>
 
-          <motion.div
-            animate={shouldReduce ? undefined : { opacity: [0.9, 1, 0.9] }}
-            transition={{ duration: 2.5, repeat: Infinity }}
-            className="mt-6 overflow-hidden rounded-md border border-white/15 bg-black/25 p-6"
-          >
-            <div className="relative mx-auto h-40 max-w-xl">
-              <div className="absolute left-1/2 top-1/2 h-4 w-44 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/20" />
-              <div
-                className={`absolute left-1/2 top-1/2 h-12 w-60 -translate-x-1/2 -translate-y-1/2 rounded-[10px] bg-gradient-to-r ${colorClass(config.liveryColor)}`}
-              />
-              <div className="absolute left-[18%] top-[58%] h-10 w-10 rounded-full border-2 border-white/30 bg-black" />
-              <div className="absolute right-[18%] top-[58%] h-10 w-10 rounded-full border-2 border-white/30 bg-black" />
-              <div className="absolute left-[30%] top-[23%] h-5 w-14 rounded bg-white/25" />
-              <div className="absolute right-[30%] top-[23%] h-5 w-14 rounded bg-white/25" />
-            </div>
-          </motion.div>
+          <CarSceneLoader config={config} shouldReduce={shouldReduce} />
         </article>
 
         <article className="glass-panel rounded-lg p-5">
