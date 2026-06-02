@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  @apply bg-canvas bg-gradientPulse bg-fixed font-body text-chrome-white antialiased;
+}
+
+main {
+  @apply relative z-10;
+}
+
+.app-container {
+  @apply mx-auto w-full max-w-7xl px-4 pb-16 pt-8 sm:px-6 lg:px-8;
+}
+
+.glass-panel {
+  @apply border border-white/20 bg-surface backdrop-blur-lg;
+}
+
+.neon-title {
+  text-shadow: 0 0 20px rgba(22, 217, 255, 0.35), 0 0 10px rgba(255, 43, 74, 0.25);
+}
+
+.grid-overlay {
+  background-image: theme("backgroundImage.grid");
+  background-size: 36px 36px;
+}
+
+.focus-ring {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric-blue focus-visible:ring-offset-2 focus-visible:ring-offset-canvas;
+}
