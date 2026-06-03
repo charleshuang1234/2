@@ -10,16 +10,34 @@ type SceneProps = {
 const MODEL_EMBED_URL = "https://fetchcfd.com/threeDViewGltf-embed-project/4846-f1-2026-car-3d-model";
 const MODEL_SOURCE_URL = "https://fetchcfd.com/view-project/4846-f1-2026-car-3d-model";
 
-const liveryAccent: Record<BuilderConfig["liveryColor"], { glow: string; label: string }> = {
-  electricBlue: { glow: "rgba(22, 217, 255, 0.65)", label: "Electric Blue" },
-  neonRed: { glow: "rgba(255, 43, 74, 0.72)", label: "Neon Red" },
-  signalGold: { glow: "rgba(249, 199, 79, 0.72)", label: "Signal Gold" }
+const liveryAccent: Record<
+  BuilderConfig["liveryColor"],
+  { glow: string; label: string; filter: string; wash: string }
+> = {
+  electricBlue: {
+    glow: "rgba(22, 217, 255, 0.65)",
+    label: "Electric Blue",
+    filter: "hue-rotate(155deg) saturate(1.45) brightness(1.04)",
+    wash: "rgba(22, 217, 255, 0.28)"
+  },
+  neonRed: {
+    glow: "rgba(255, 43, 74, 0.72)",
+    label: "Neon Red",
+    filter: "saturate(1.28) contrast(1.06)",
+    wash: "rgba(255, 43, 74, 0.2)"
+  },
+  signalGold: {
+    glow: "rgba(249, 199, 79, 0.72)",
+    label: "Signal Gold",
+    filter: "hue-rotate(42deg) saturate(1.35) brightness(1.1)",
+    wash: "rgba(249, 199, 79, 0.24)"
+  }
 };
 
-const powerUnitLabel: Record<BuilderConfig["powerUnit"], string> = {
-  mercedes: "Mercedes PU",
-  ferrari: "Ferrari PU",
-  redBull: "Red Bull PU"
+const powerUnitAccent: Record<BuilderConfig["powerUnit"], { color: string; label: string }> = {
+  mercedes: { color: "rgba(85, 242, 214, 0.86)", label: "Mercedes PU" },
+  ferrari: { color: "rgba(255, 43, 74, 0.88)", label: "Ferrari PU" },
+  redBull: { color: "rgba(249, 199, 79, 0.9)", label: "Red Bull PU" }
 };
 
 const aeroLabel: Record<BuilderConfig["aeroPackage"], string> = {
@@ -30,6 +48,7 @@ const aeroLabel: Record<BuilderConfig["aeroPackage"], string> = {
 
 export function F1CarScene({ config, shouldReduce }: SceneProps) {
   const accent = liveryAccent[config.liveryColor];
+  const engine = powerUnitAccent[config.powerUnit];
 
   return (
     <div
@@ -49,6 +68,16 @@ export function F1CarScene({ config, shouldReduce }: SceneProps) {
         className="h-full w-full border-0"
         allow="autoplay; fullscreen; vr"
         loading="lazy"
+        style={{
+          filter: accent.filter
+        }}
+      />
+
+      <div
+        aria-hidden
+        data-testid="livery-color-wash"
+        className="pointer-events-none absolute inset-0 mix-blend-color"
+        style={{ backgroundColor: accent.wash }}
       />
 
       <div
@@ -56,12 +85,21 @@ export function F1CarScene({ config, shouldReduce }: SceneProps) {
         className="pointer-events-none absolute inset-0 border border-white/10 bg-[linear-gradient(120deg,rgba(255,255,255,0.08),transparent_28%,transparent_72%,rgba(255,255,255,0.08))]"
       />
 
+      <div
+        aria-hidden
+        data-testid="engine-color-accent"
+        className="pointer-events-none absolute left-[52%] top-[45%] h-20 w-28 -translate-x-1/2 rounded-full blur-2xl"
+        style={{
+          background: `radial-gradient(circle, ${engine.color}, transparent 68%)`
+        }}
+      />
+
       <div className="pointer-events-none absolute left-3 top-3 flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-wider text-white/85">
         <span className="rounded-full border border-white/20 bg-black/60 px-2 py-1 backdrop-blur">
           {accent.label}
         </span>
         <span className="rounded-full border border-white/20 bg-black/60 px-2 py-1 backdrop-blur">
-          {powerUnitLabel[config.powerUnit]}
+          {engine.label}
         </span>
         <span className="rounded-full border border-white/20 bg-black/60 px-2 py-1 backdrop-blur">
           {aeroLabel[config.aeroPackage]}

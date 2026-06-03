@@ -23,6 +23,15 @@ describe("F1CarScene", () => {
       "src",
       "https://fetchcfd.com/threeDViewGltf-embed-project/4846-f1-2026-car-3d-model"
     );
+    expect(screen.getByTitle("F1 2026 realistic 3D model viewer")).toHaveStyle({
+      filter: "saturate(1.28) contrast(1.06)"
+    });
+    expect(screen.getByTestId("livery-color-wash")).toHaveStyle({
+      backgroundColor: "rgba(255, 43, 74, 0.2)"
+    });
+    expect(screen.getByTestId("engine-color-accent")).toHaveStyle({
+      background: "radial-gradient(circle, rgba(255, 43, 74, 0.88), transparent 68%)"
+    });
     expect(screen.getByText("Model: FetchCFD / Nimaxo")).toBeInTheDocument();
   });
 });
