@@ -1,24 +1,19 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 
+const useGLTFMock = vi.hoisted(() => vi.fn());
+
 vi.mock("@react-three/fiber", () => ({
-  Canvas: ({ children: _children, ...props }: { children?: ReactNode }) => (
-    <div {...props} data-testid="mock-three-canvas" />
+  Canvas: ({ children, ...props }: { children?: ReactNode }) => (
+    <div {...props} data-testid="mock-three-canvas">
+      {children}
+    </div>
   )
 }));
 
 vi.mock("@react-three/drei", () => {
-  const useGLTF = Object.assign(
-    vi.fn(() => ({
-      scene: {
-        clone: () => ({
-          traverse: vi.fn()
-        })
-      }
-    })),
-    { preload: vi.fn() }
-  );
+  const useGLTF = Object.assign(useGLTFMock, { preload: vi.fn() });
 
   return {
     Bounds: ({ children }: { children: ReactNode }) => <>{children}</>,
@@ -33,7 +28,13 @@ vi.mock("@react-three/drei", () => {
 import { F1CarScene } from "@/components/builder/f1-car-scene";
 
 describe("F1CarScene", () => {
-  it("renders the local 3D car viewer with matching builder setup metadata", () => {
+  beforeEach(() => {
+    useGLTFMock.mockImplementation(() => {
+      throw new Error("Model not available in test");
+    });
+  });
+
+  it("renders the built-in F1 car with matching builder setup metadata", () => {
     render(
       <F1CarScene
         config={{
@@ -53,6 +54,12 @@ describe("F1CarScene", () => {
     expect(screen.getByText("Neon Red Livery")).toBeInTheDocument();
     expect(screen.getByText("Ferrari PU")).toBeInTheDocument();
     expect(screen.getByText("High Downforce")).toBeInTheDocument();
-    expect(screen.getByText("Local GLB material controls")).toBeInTheDocument();
+    expect(screen.getByText("360 F1 chassis")).toBeInTheDocument();
+    expect(screen.getByTestId("built-in-f1-car")).toBeInTheDocument();
+    expect(screen.getByTestId("f1-long-nose")).toBeInTheDocument();
+    expect(screen.getByTestId("f1-front-wing")).toBeInTheDocument();
+    expect(screen.getByTestId("f1-rear-wing")).toBeInTheDocument();
+    expect(screen.getByTestId("f1-halo")).toBeInTheDocument();
+    expect(screen.getAllByTestId("f1-wheel")).toHaveLength(4);
   });
 });
