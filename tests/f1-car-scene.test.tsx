@@ -1,9 +1,39 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import type { ReactNode } from "react";
+
+vi.mock("@react-three/fiber", () => ({
+  Canvas: ({ children: _children, ...props }: { children?: ReactNode }) => (
+    <div {...props} data-testid="mock-three-canvas" />
+  )
+}));
+
+vi.mock("@react-three/drei", () => {
+  const useGLTF = Object.assign(
+    vi.fn(() => ({
+      scene: {
+        clone: () => ({
+          traverse: vi.fn()
+        })
+      }
+    })),
+    { preload: vi.fn() }
+  );
+
+  return {
+    Bounds: ({ children }: { children: ReactNode }) => <>{children}</>,
+    ContactShadows: () => null,
+    Environment: () => null,
+    Html: ({ children }: { children: ReactNode }) => <>{children}</>,
+    OrbitControls: () => <div data-testid="mock-orbit-controls" />,
+    useGLTF
+  };
+});
+
 import { F1CarScene } from "@/components/builder/f1-car-scene";
 
 describe("F1CarScene", () => {
-  it("renders the hosted realistic F1 model viewer with builder setup metadata", () => {
+  it("renders the local 3D car viewer with matching builder setup metadata", () => {
     render(
       <F1CarScene
         config={{
@@ -19,19 +49,10 @@ describe("F1CarScene", () => {
     expect(scene).toHaveAttribute("data-livery", "neonRed");
     expect(scene).toHaveAttribute("data-power", "ferrari");
     expect(scene).toHaveAttribute("data-aero", "highDownforce");
-    expect(screen.getByTitle("F1 2026 realistic 3D model viewer")).toHaveAttribute(
-      "src",
-      "https://fetchcfd.com/threeDViewGltf-embed-project/4846-f1-2026-car-3d-model"
-    );
-    expect(screen.getByTitle("F1 2026 realistic 3D model viewer")).toHaveStyle({
-      filter: "saturate(1.28) contrast(1.06)"
-    });
-    expect(screen.getByTestId("livery-color-wash")).toHaveStyle({
-      backgroundColor: "rgba(255, 43, 74, 0.2)"
-    });
-    expect(screen.getByTestId("engine-color-accent")).toHaveStyle({
-      background: "radial-gradient(circle, rgba(255, 43, 74, 0.88), transparent 68%)"
-    });
-    expect(screen.getByText("Model: FetchCFD / Nimaxo")).toBeInTheDocument();
+    expect(screen.getByTestId("mock-three-canvas")).toBeInTheDocument();
+    expect(screen.getByText("Neon Red Livery")).toBeInTheDocument();
+    expect(screen.getByText("Ferrari PU")).toBeInTheDocument();
+    expect(screen.getByText("High Downforce")).toBeInTheDocument();
+    expect(screen.getByText("Local GLB material controls")).toBeInTheDocument();
   });
 });
