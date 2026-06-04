@@ -27,7 +27,7 @@ export function StandingsClient({ standings, status }: Props) {
         <DataStatusBadge status={status} />
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-label="Driver info cards">
+      <section className="grid gap-4 sm:grid-cols-2" aria-label="Driver info cards">
         {ordered.map((driver, index) => {
           const isExpanded = expandedDriver === driver.id;
           const nextDriver = ordered[index + 1];
