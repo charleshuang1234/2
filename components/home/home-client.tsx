@@ -15,6 +15,8 @@ type Props = {
   status: DataStatus;
 };
 
+const FAVORITES_KEY = "f1-pulse-favorite-drivers";
+
 function computeCountdown(date: string, time?: string) {
   const targetIso = time ? `${date}T${time.replace("Z", "")}Z` : `${date}T00:00:00Z`;
   const target = new Date(targetIso).getTime();
@@ -24,6 +26,11 @@ function computeCountdown(date: string, time?: string) {
   const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
   const mins = Math.floor((diff / (1000 * 60)) % 60);
   return { days, hours, mins };
+}
+
+function getRaceDate(date: string, time?: string) {
+  const iso = time ? `${date}T${time.replace("Z", "")}Z` : `${date}T00:00:00Z`;
+  return new Date(iso);
 }
 
 const featureBlocks = [
@@ -91,6 +98,8 @@ function formatLocalRaceTime(date: string, timeZone: string, time?: string) {
 export function HomeClient({ latestResult, nextRace, standings, status }: Props) {
   const { shouldReduce } = useAdaptiveMotion();
   const [countdown, setCountdown] = useState(() => computeCountdown(nextRace.date, nextRace.time));
+  const [favoriteDriverIds, setFavoriteDriverIds] = useState<string[]>([]);
+  const [reminderStatus, setReminderStatus] = useState("Race reminder");
   const { scrollYProgress } = useScroll();
   const parallaxA = useTransform(scrollYProgress, [0, 1], [0, shouldReduce ? -45 : -120]);
   const parallaxB = useTransform(scrollYProgress, [0, 1], [0, shouldReduce ? -70 : -200]);
@@ -98,6 +107,10 @@ export function HomeClient({ latestResult, nextRace, standings, status }: Props)
   const topDrivers = useMemo(
     () => [...standings].sort((a, b) => a.position - b.position).slice(0, 3),
     [standings]
+  );
+  const favoriteDrivers = useMemo(
+    () => standings.filter((driver) => favoriteDriverIds.includes(driver.id)).sort((a, b) => a.position - b.position),
+    [favoriteDriverIds, standings]
   );
 
   useEffect(() => {
@@ -112,10 +125,64 @@ export function HomeClient({ latestResult, nextRace, standings, status }: Props)
     setRaceTimeLabel(formatLocalRaceTime(nextRace.date, timeZone, nextRace.time));
   }, [nextRace.date, nextRace.time]);
 
+  useEffect(() => {
+    const cached = localStorage.getItem(FAVORITES_KEY);
+    if (!cached) return;
+
+    try {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed)) {
+        setFavoriteDriverIds(parsed.filter((item): item is string => typeof item === "string"));
+      }
+    } catch {
+      localStorage.removeItem(FAVORITES_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favoriteDriverIds));
+  }, [favoriteDriverIds]);
+
   const winnerHeadline = useMemo(
     () => `${latestResult.winner.fullName} won ${latestResult.raceName}`,
     [latestResult]
   );
+
+  function toggleFavorite(driverId: string) {
+    setFavoriteDriverIds((current) =>
+      current.includes(driverId) ? current.filter((id) => id !== driverId) : [...current, driverId]
+    );
+  }
+
+  async function scheduleRaceReminder() {
+    if (!("Notification" in window)) {
+      setReminderStatus("Notifications unavailable");
+      return;
+    }
+
+    const permission = Notification.permission === "default" ? await Notification.requestPermission() : Notification.permission;
+    if (permission !== "granted") {
+      setReminderStatus("Notifications blocked");
+      return;
+    }
+
+    const reminderTime = getRaceDate(nextRace.date, nextRace.time).getTime() - 15 * 60 * 1000;
+    const delay = reminderTime - Date.now();
+    if (delay <= 0) {
+      new Notification("F1 Pulse", {
+        body: `${nextRace.raceName} is close. Time to open race mode.`
+      });
+      setReminderStatus("Reminder sent");
+      return;
+    }
+
+    window.setTimeout(() => {
+      new Notification("F1 Pulse", {
+        body: `${nextRace.raceName} starts in 15 minutes.`
+      });
+    }, delay);
+    setReminderStatus("Reminder armed");
+  }
 
   return (
     <div className="space-y-10">
@@ -180,6 +247,38 @@ export function HomeClient({ latestResult, nextRace, standings, status }: Props)
           <Link href="/standings" className="focus-ring rounded-md border border-white/15 px-3 py-2 text-sm font-semibold text-white/80 transition hover:border-electric-blue/60 hover:text-electric-blue">
             Full standings →
           </Link>
+        </div>
+        <div className="mt-4 rounded-md border border-electric-blue/25 bg-electric-blue/5 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-electric-blue">My Pulse</p>
+              <h3 className="font-display text-xl text-white">
+                {favoriteDrivers.length ? "Following your title fight" : "Follow drivers for a personal feed"}
+              </h3>
+            </div>
+            <button
+              type="button"
+              onClick={scheduleRaceReminder}
+              className="focus-ring min-h-11 rounded-md border border-neon-red/45 bg-neon-red/10 px-3 py-2 text-sm font-semibold text-neon-red transition hover:border-neon-red hover:bg-neon-red/15"
+            >
+              {reminderStatus}
+            </button>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {(favoriteDrivers.length ? favoriteDrivers : topDrivers).map((driver) => (
+              <button
+                key={driver.id}
+                type="button"
+                onClick={() => toggleFavorite(driver.id)}
+                aria-pressed={favoriteDriverIds.includes(driver.id)}
+                className="focus-ring min-h-11 rounded-md border border-white/15 bg-black/25 px-3 py-2 text-left text-sm text-white/75 transition hover:border-electric-blue/60 hover:text-electric-blue"
+              >
+                <span className="font-display text-electric-blue">P{driver.position}</span>{" "}
+                {driver.givenName} {driver.familyName}
+                <span className="ml-2 text-white/45">{favoriteDriverIds.includes(driver.id) ? "Following" : "Follow"}</span>
+              </button>
+            ))}
+          </div>
         </div>
         <div className="mt-4 grid gap-3 md:grid-cols-3">
           {topDrivers.map((driver) => {
