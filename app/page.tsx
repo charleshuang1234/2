@@ -14,16 +14,18 @@ function mergeStatus(...statuses: DataStatus[]): DataStatus {
 
 export default async function HomePage() {
   const provider = getF1DataProvider();
-  const [latestResultData, nextRaceData] = await Promise.all([
+  const [latestResultData, nextRaceData, standingsData] = await Promise.all([
     provider.getLatestResult(),
-    provider.getNextRace()
+    provider.getNextRace(),
+    provider.getDriverStandings()
   ]);
-  const status = mergeStatus(latestResultData.status, nextRaceData.status);
+  const status = mergeStatus(latestResultData.status, nextRaceData.status, standingsData.status);
 
   return (
     <HomeClient
       latestResult={latestResultData.result}
       nextRace={nextRaceData.race}
+      standings={standingsData.standings}
       status={status}
     />
   );
