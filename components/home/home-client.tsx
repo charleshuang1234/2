@@ -44,13 +44,57 @@ const featureBlocks = [
   }
 ];
 
+const constructorColors: Array<{ match: string; color: string; text: string }> = [
+  { match: "mercedes", color: "#00D2BE", text: "#041312" },
+  { match: "ferrari", color: "#DC0000", text: "#ffffff" },
+  { match: "red bull", color: "#3671C6", text: "#ffffff" },
+  { match: "mclaren", color: "#FF8000", text: "#0d0801" },
+  { match: "aston martin", color: "#006F44", text: "#ffffff" },
+  { match: "alpine", color: "#0093CC", text: "#ffffff" },
+  { match: "williams", color: "#005AFF", text: "#ffffff" },
+  { match: "haas", color: "#B6BABD", text: "#05070f" },
+  { match: "sauber", color: "#52E252", text: "#041312" },
+  { match: "kick", color: "#52E252", text: "#041312" },
+  { match: "racing bulls", color: "#6692FF", text: "#05070f" }
+];
+
+function getConstructorColor(team: string) {
+  const normalized = team.toLowerCase();
+  return constructorColors.find((entry) => normalized.includes(entry.match)) ?? {
+    color: "#FFFFFF",
+    text: "rgba(255,255,255,0.78)"
+  };
+}
+
+function formatLocalRaceTime(date: string, timeZone: string, time?: string) {
+  const iso = time ? `${date}T${time.replace("Z", "")}Z` : `${date}T00:00:00Z`;
+  const formatter = new Intl.DateTimeFormat(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone,
+    timeZoneName: "shortOffset"
+  });
+  const parts = formatter.formatToParts(new Date(iso));
+  const zoneName = parts.find((part) => part.type === "timeZoneName")?.value;
+  const dateTime = parts
+    .filter((part) => part.type !== "timeZoneName")
+    .map((part) => part.value)
+    .join("")
+    .trim()
+    .replace(/,\s*$/, "");
+  return zoneName ? `${dateTime} · ${zoneName}` : dateTime;
+}
+
 export function HomeClient({ latestResult, nextRace, standings, status }: Props) {
   const { shouldReduce } = useAdaptiveMotion();
   const [countdown, setCountdown] = useState(() => computeCountdown(nextRace.date, nextRace.time));
   const { scrollYProgress } = useScroll();
   const parallaxA = useTransform(scrollYProgress, [0, 1], [0, shouldReduce ? -45 : -120]);
   const parallaxB = useTransform(scrollYProgress, [0, 1], [0, shouldReduce ? -70 : -200]);
-  const [timezone, setTimezone] = useState("local timezone");
+  const [raceTimeLabel, setRaceTimeLabel] = useState(() => formatRaceDate(nextRace.date, nextRace.time));
   const topDrivers = useMemo(
     () => [...standings].sort((a, b) => a.position - b.position).slice(0, 3),
     [standings]
@@ -64,8 +108,9 @@ export function HomeClient({ latestResult, nextRace, standings, status }: Props)
   }, [nextRace.date, nextRace.time]);
 
   useEffect(() => {
-    setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
-  }, []);
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    setRaceTimeLabel(formatLocalRaceTime(nextRace.date, timeZone, nextRace.time));
+  }, [nextRace.date, nextRace.time]);
 
   const winnerHeadline = useMemo(
     () => `${latestResult.winner.fullName} won ${latestResult.raceName}`,
@@ -108,9 +153,7 @@ export function HomeClient({ latestResult, nextRace, standings, status }: Props)
           <p className="mt-2 text-white/75">
             {nextRace.circuitName} · {nextRace.locality}, {nextRace.country}
           </p>
-          <p className="mt-2 text-sm text-white/65">
-            {formatRaceDate(nextRace.date, nextRace.time)} local time ({timezone})
-          </p>
+          <p className="mt-2 text-sm text-white/65">{raceTimeLabel}</p>
           <div className="mt-4 grid grid-cols-3 gap-3 text-center">
             <div className="rounded-md border border-white/15 bg-black/20 p-3">
               <p className="font-display text-3xl text-electric-blue">{countdown.days}</p>
@@ -135,25 +178,38 @@ export function HomeClient({ latestResult, nextRace, standings, status }: Props)
             <h2 className="mt-1 font-display text-2xl text-electric-blue">Top 3 Drivers</h2>
           </div>
           <Link href="/standings" className="focus-ring rounded-md border border-white/15 px-3 py-2 text-sm font-semibold text-white/80 transition hover:border-electric-blue/60 hover:text-electric-blue">
-            Full standings -&gt;
+            Full standings →
           </Link>
         </div>
         <div className="mt-4 grid gap-3 md:grid-cols-3">
-          {topDrivers.map((driver) => (
-            <article key={driver.id} className="rounded-md border border-white/15 bg-black/25 p-4">
-              <div className="flex items-center justify-between gap-2">
-                <p className="font-display text-xl text-electric-blue">P{driver.position}</p>
-                <p className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-xs font-semibold text-white/65">{driver.code}</p>
-              </div>
-              <h3 className="mt-3 break-words font-display text-xl text-white">
-                {driver.givenName} {driver.familyName}
-              </h3>
-              <p className="mt-1 break-words text-sm text-white/65">{driver.team}</p>
-              <p className="mt-3 text-sm text-white/75">
-                <span className="font-display text-lg text-signal-gold">{driver.points}</span> pts · {driver.wins} wins
-              </p>
-            </article>
-          ))}
+          {topDrivers.map((driver) => {
+            const teamColor = getConstructorColor(driver.team);
+            return (
+              <article key={driver.id} className="rounded-md border border-white/15 bg-black/25 p-4 transition duration-200 hover:scale-[1.02] hover:border-electric-blue/70 hover:shadow-neonBlue">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-display text-xl text-electric-blue">P{driver.position}</p>
+                  <p
+                    className="rounded-md border px-2 py-1 text-xs font-semibold uppercase tracking-wider"
+                    style={{
+                      borderColor: teamColor.color,
+                      backgroundColor: `${teamColor.color}26`,
+                      color: teamColor.text,
+                      boxShadow: `0 0 14px ${teamColor.color}55`
+                    }}
+                  >
+                    {driver.code}
+                  </p>
+                </div>
+                <h3 className="mt-3 break-words font-display text-xl text-white">
+                  {driver.givenName} {driver.familyName}
+                </h3>
+                <p className="mt-1 break-words text-sm text-white/65">{driver.team}</p>
+                <p className="mt-3 text-sm text-white/75">
+                  <span className="font-display text-lg text-signal-gold">{driver.points}</span> pts · {driver.wins} wins
+                </p>
+              </article>
+            );
+          })}
         </div>
       </section>
 
@@ -168,14 +224,15 @@ export function HomeClient({ latestResult, nextRace, standings, status }: Props)
           >
             <Link
               href={feature.href}
-              className="focus-ring glass-panel block h-full rounded-lg p-5 transition hover:-translate-y-1 hover:border-electric-blue/70 hover:shadow-neonBlue"
+              className="focus-ring glass-panel group relative block h-full rounded-lg p-5 pr-14 transition duration-200 hover:scale-[1.02] hover:border-electric-blue/70 hover:shadow-neonBlue"
             >
-              <div className="flex items-start justify-between gap-3">
-                <h3 className="font-display text-2xl text-electric-blue">{feature.title}</h3>
-                <span aria-hidden className="rounded-md border border-white/15 bg-black/30 px-2 py-1 text-sm text-white/70">
-                  -&gt;
-                </span>
-              </div>
+              <span
+                aria-hidden="true"
+                className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-md border border-electric-blue/35 bg-electric-blue/10 font-display text-lg text-electric-blue transition group-hover:border-electric-blue/75 group-hover:bg-electric-blue/20"
+              >
+                →
+              </span>
+              <h3 className="font-display text-2xl text-electric-blue">{feature.title}</h3>
               <p className="mt-3 text-white/80">{feature.copy}</p>
             </Link>
           </motion.div>
