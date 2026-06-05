@@ -54,7 +54,7 @@ describe("F1CarScene", () => {
     expect(screen.getByText("Neon Red Livery")).toBeInTheDocument();
     expect(screen.getByText("Ferrari PU")).toBeInTheDocument();
     expect(screen.getByText("High Downforce")).toBeInTheDocument();
-    expect(screen.getByText("360 F1 chassis")).toBeInTheDocument();
+    expect(screen.getByText("Built-in 360 chassis")).toBeInTheDocument();
     expect(screen.getByTestId("built-in-f1-car")).toBeInTheDocument();
     expect(screen.getByTestId("f1-long-nose")).toBeInTheDocument();
     expect(screen.getByTestId("f1-front-wing")).toBeInTheDocument();
