@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { simulateCar } from "@/lib/builder/simulate-car";
 import type { BuilderConfig, BuilderStats } from "@/lib/types";
 import { useAdaptiveMotion } from "@/components/hooks/use-adaptive-motion";
@@ -12,6 +12,104 @@ const defaultConfig: BuilderConfig = {
   powerUnit: "mercedes",
   aeroPackage: "balanced"
 };
+
+const powerMetrics: Record<BuilderConfig["powerUnit"], { powerOutput: number; weightPenalty: number }> = {
+  mercedes: { powerOutput: 1042, weightPenalty: 0 },
+  ferrari: { powerOutput: 1050, weightPenalty: 2 },
+  redBull: { powerOutput: 1038, weightPenalty: -1 }
+};
+
+const aeroMetrics: Record<BuilderConfig["aeroPackage"], { downforce: number; topSpeedAdjust: number; weightPenalty: number }> = {
+  balanced: { downforce: 72, topSpeedAdjust: 0, weightPenalty: 0 },
+  highDownforce: { downforce: 88, topSpeedAdjust: -4, weightPenalty: 3 },
+  lowDrag: { downforce: 58, topSpeedAdjust: 6, weightPenalty: -2 }
+};
+
+const liveryMetrics: Record<BuilderConfig["liveryColor"], { powerAdjust: number; downforceAdjust: number; weightPenalty: number }> = {
+  electricBlue: { powerAdjust: 0, downforceAdjust: 1, weightPenalty: -1 },
+  neonRed: { powerAdjust: 2, downforceAdjust: 0, weightPenalty: 0 },
+  signalGold: { powerAdjust: 1, downforceAdjust: -1, weightPenalty: 1 }
+};
+
+function derivePerformanceMetrics(config: BuilderConfig, stats: BuilderStats) {
+  const power = powerMetrics[config.powerUnit];
+  const aero = aeroMetrics[config.aeroPackage];
+  const livery = liveryMetrics[config.liveryColor];
+
+  return {
+    topSpeed: stats.topSpeed + aero.topSpeedAdjust,
+    downforce: Math.max(45, Math.min(95, aero.downforce + livery.downforceAdjust)),
+    powerOutput: power.powerOutput + livery.powerAdjust,
+    weightPenalty: power.weightPenalty + aero.weightPenalty + livery.weightPenalty
+  };
+}
+
+function AnimatedNumber({
+  value,
+  suffix = "",
+  shouldReduce
+}: {
+  value: number;
+  suffix?: string;
+  shouldReduce: boolean;
+}) {
+  const [displayValue, setDisplayValue] = useState(value);
+  const displayValueRef = useRef(value);
+
+  useEffect(() => {
+    if (shouldReduce) {
+      setDisplayValue(value);
+      displayValueRef.current = value;
+      return;
+    }
+
+    const startValue = displayValueRef.current;
+    const start = performance.now();
+    const duration = 420;
+    let frame = 0;
+
+    const animate = (now: number) => {
+      const progress = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const nextValue = Math.round(startValue + (value - startValue) * eased);
+      displayValueRef.current = nextValue;
+      setDisplayValue(nextValue);
+
+      if (progress < 1) {
+        frame = requestAnimationFrame(animate);
+      }
+    };
+
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [value, shouldReduce]);
+
+  return (
+    <span className="font-display text-2xl text-electric-blue">
+      {displayValue}
+      {suffix}
+    </span>
+  );
+}
+
+function PerformanceMetricChip({
+  label,
+  value,
+  suffix,
+  shouldReduce
+}: {
+  label: string;
+  value: number;
+  suffix: string;
+  shouldReduce: boolean;
+}) {
+  return (
+    <div className="rounded-md border border-electric-blue/25 bg-black/25 px-3 py-3">
+      <p className="text-[0.68rem] uppercase tracking-wider text-white/55">{label}</p>
+      <AnimatedNumber value={value} suffix={suffix} shouldReduce={shouldReduce} />
+    </div>
+  );
+}
 
 function StatRow({ label, value, suffix = "" }: { label: string; value: number; suffix?: string }) {
   const max = label === "Top Speed" ? 360 : 100;
@@ -36,6 +134,7 @@ export function BuilderClient() {
   const [config, setConfig] = useState<BuilderConfig>(defaultConfig);
   const { shouldReduce } = useAdaptiveMotion();
   const stats: BuilderStats = useMemo(() => simulateCar(config), [config]);
+  const performanceMetrics = useMemo(() => derivePerformanceMetrics(config, stats), [config, stats]);
 
   useEffect(() => {
     const cached = localStorage.getItem(STORAGE_KEY);
@@ -72,7 +171,7 @@ export function BuilderClient() {
                 onChange={(event) =>
                   setConfig((prev) => ({ ...prev, liveryColor: event.target.value as BuilderConfig["liveryColor"] }))
                 }
-                className="focus-ring w-full rounded-md border border-white/20 bg-black/40 px-3 py-2"
+                className="focus-ring min-h-11 w-full rounded-md border border-white/20 bg-black/40 px-3 py-2"
               >
                 <option value="electricBlue">Electric Blue</option>
                 <option value="neonRed">Neon Red</option>
@@ -86,7 +185,7 @@ export function BuilderClient() {
                 onChange={(event) =>
                   setConfig((prev) => ({ ...prev, powerUnit: event.target.value as BuilderConfig["powerUnit"] }))
                 }
-                className="focus-ring w-full rounded-md border border-white/20 bg-black/40 px-3 py-2"
+                className="focus-ring min-h-11 w-full rounded-md border border-white/20 bg-black/40 px-3 py-2"
               >
                 <option value="mercedes">Mercedes</option>
                 <option value="ferrari">Ferrari</option>
@@ -100,7 +199,7 @@ export function BuilderClient() {
                 onChange={(event) =>
                   setConfig((prev) => ({ ...prev, aeroPackage: event.target.value as BuilderConfig["aeroPackage"] }))
                 }
-                className="focus-ring w-full rounded-md border border-white/20 bg-black/40 px-3 py-2"
+                className="focus-ring min-h-11 w-full rounded-md border border-white/20 bg-black/40 px-3 py-2"
               >
                 <option value="balanced">Balanced</option>
                 <option value="highDownforce">High Downforce</option>
@@ -110,6 +209,12 @@ export function BuilderClient() {
           </div>
 
           <CarSceneLoader config={config} shouldReduce={shouldReduce} />
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Performance metrics">
+            <PerformanceMetricChip label="Top Speed" value={performanceMetrics.topSpeed} suffix=" km/h" shouldReduce={shouldReduce} />
+            <PerformanceMetricChip label="Downforce" value={performanceMetrics.downforce} suffix="%" shouldReduce={shouldReduce} />
+            <PerformanceMetricChip label="Power Output" value={performanceMetrics.powerOutput} suffix=" bhp" shouldReduce={shouldReduce} />
+            <PerformanceMetricChip label="Weight Penalty" value={performanceMetrics.weightPenalty} suffix=" kg" shouldReduce={shouldReduce} />
+          </div>
         </article>
 
         <article className="glass-panel rounded-lg p-5">
