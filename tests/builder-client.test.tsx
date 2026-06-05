@@ -30,6 +30,10 @@ describe("BuilderClient", () => {
     expect(screen.getByLabelText("Livery")).toBeInTheDocument();
     expect(screen.getByLabelText("Power Unit")).toBeInTheDocument();
     expect(screen.getByLabelText("Aero")).toBeInTheDocument();
+    expect(screen.getAllByText("Top Speed").length).toBeGreaterThan(0);
+    expect(screen.getByText("Downforce")).toBeInTheDocument();
+    expect(screen.getByText("Power Output")).toBeInTheDocument();
+    expect(screen.getByText("Weight Penalty")).toBeInTheDocument();
   });
 
   it("passes builder selections into the 3D scene", () => {
