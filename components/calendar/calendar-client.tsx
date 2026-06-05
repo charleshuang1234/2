@@ -13,6 +13,14 @@ type Props = {
   status: DataStatus;
 };
 
+function CountryBadge({ country }: { country: string }) {
+  return (
+    <span className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-xs font-semibold uppercase tracking-wider text-white/70">
+      {country}
+    </span>
+  );
+}
+
 export function CalendarClient({ races, teams, status }: Props) {
   const { shouldReduce } = useAdaptiveMotion();
   const [openTeamId, setOpenTeamId] = useState<string>(teams[0]?.id ?? "");
@@ -40,13 +48,18 @@ export function CalendarClient({ races, teams, status }: Props) {
               className="rounded-md border border-white/15 bg-black/20 p-4"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-display text-xl text-electric-blue">
-                  R{race.round} - {race.raceName}
-                </p>
-                <p className="text-sm text-white/70">{formatRaceDate(race.date, race.time)}</p>
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <span className="rounded-md border border-electric-blue/50 bg-electric-blue/10 px-2 py-1 font-display text-sm text-electric-blue">
+                    Round {race.round}
+                  </span>
+                  <CountryBadge country={race.country} />
+                </div>
+                <p className="text-xs uppercase tracking-wider text-white/55">Date · {formatRaceDate(race.date, race.time)}</p>
               </div>
-              <p className="text-sm text-white/65">
-                {race.circuitName} - {race.locality}, {race.country}
+              <h3 className="mt-3 break-words font-display text-xl text-electric-blue">{race.raceName}</h3>
+              <p className="mt-2 text-xs uppercase tracking-wider text-white/50">Location</p>
+              <p className="break-words text-sm text-white/70">
+                {race.circuitName} · {race.locality}, {race.country}
               </p>
             </motion.article>
           ))}
@@ -70,7 +83,7 @@ export function CalendarClient({ races, teams, status }: Props) {
                   <p className="text-sm text-white/60">P{team.position}</p>
                 </div>
                 <p className="mt-1 text-sm text-white/70">
-                  {team.points} pts - {team.wins} wins
+                  {team.points} pts · {team.wins} wins
                 </p>
                 {open && (
                   <div className="mt-3 border-t border-white/10 pt-3">
