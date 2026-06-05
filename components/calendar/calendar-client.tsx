@@ -76,7 +76,7 @@ export function CalendarClient({ races, teams, status }: Props) {
                 key={team.id}
                 type="button"
                 onClick={() => setOpenTeamId(open ? "" : team.id)}
-                className="focus-ring rounded-md border border-white/15 bg-black/25 p-4 text-left transition hover:border-electric-blue/40"
+                className="focus-ring min-h-11 rounded-md border border-white/15 bg-black/25 p-4 text-left transition hover:border-electric-blue/40"
               >
                 <div className="flex items-center justify-between">
                   <p className="font-display text-xl text-neon-red">{team.name}</p>
