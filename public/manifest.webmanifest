@@ -1,0 +1,19 @@
+{
+  "name": "F1 Pulse",
+  "short_name": "F1 Pulse",
+  "description": "A dark neon Formula 1 companion with live data, builder tools, and race reminders.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#05070f",
+  "theme_color": "#05070f",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
