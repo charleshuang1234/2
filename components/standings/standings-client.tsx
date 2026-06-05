@@ -46,7 +46,7 @@ export function StandingsClient({ standings, status }: Props) {
                 aria-expanded={isExpanded}
                 aria-controls={`driver-details-${driver.id}`}
                 onClick={() => setExpandedDriver((current) => (current === driver.id ? null : driver.id))}
-                className="focus-ring absolute inset-0 z-10 rounded-lg"
+                className="focus-ring absolute inset-0 z-10 min-h-11 rounded-lg"
               >
                 <span className="sr-only">
                   {isExpanded ? "Collapse" : "Expand"} {fullName} driver info
@@ -132,7 +132,7 @@ export function StandingsClient({ standings, status }: Props) {
             <select
               value={driverA}
               onChange={(event) => setDriverA(event.target.value)}
-              className="focus-ring w-full rounded-md border border-white/20 bg-black/40 px-3 py-2 text-white"
+              className="focus-ring min-h-11 w-full rounded-md border border-white/20 bg-black/40 px-3 py-2 text-white"
             >
               {ordered.map((driver) => (
                 <option key={driver.id} value={driver.id}>
@@ -146,7 +146,7 @@ export function StandingsClient({ standings, status }: Props) {
             <select
               value={driverB}
               onChange={(event) => setDriverB(event.target.value)}
-              className="focus-ring w-full rounded-md border border-white/20 bg-black/40 px-3 py-2 text-white"
+              className="focus-ring min-h-11 w-full rounded-md border border-white/20 bg-black/40 px-3 py-2 text-white"
             >
               {ordered.map((driver) => (
                 <option key={driver.id} value={driver.id}>
