@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { HomeClient } from "@/components/home/home-client";
 import type { DriverStanding, RaceResult, UpcomingRace } from "@/lib/types";
@@ -85,5 +85,25 @@ describe("HomeClient", () => {
     expect(screen.getByRole("link", { name: /Live Stats/i })).toHaveAttribute("href", "/standings");
     expect(screen.getByRole("link", { name: /Custom Cars/i })).toHaveAttribute("href", "/builder");
     expect(screen.getByRole("link", { name: /Interactive/i })).toHaveAttribute("href", "/calendar");
+  });
+
+  it("lets users follow drivers for the My Pulse feed", () => {
+    render(
+      <HomeClient
+        latestResult={latestResult}
+        nextRace={nextRace}
+        standings={standings}
+        status={{ state: "live", season: "2026", source: "jolpi-live" }}
+      />
+    );
+
+    expect(screen.getByText("Follow drivers for a personal feed")).toBeInTheDocument();
+
+    const alexButton = screen.getByRole("button", { name: /Alex Driver/i });
+    expect(alexButton).toHaveAttribute("aria-pressed", "false");
+    fireEvent.click(alexButton);
+
+    expect(alexButton).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText("Following your title fight")).toBeInTheDocument();
   });
 });
