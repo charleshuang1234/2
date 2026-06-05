@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="F1 Pulse icon">
+  <rect width="512" height="512" rx="96" fill="#05070f"/>
+  <path d="M96 278h134l44-86 45 154 34-68h63" fill="none" stroke="#16d9ff" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M91 171h183c54 0 93 18 118 52" fill="none" stroke="#ff2b4a" stroke-width="30" stroke-linecap="round"/>
+  <path d="M96 341h120c50 0 86-15 110-44" fill="none" stroke="#f9c74f" stroke-width="22" stroke-linecap="round"/>
+  <circle cx="364" cy="342" r="21" fill="#16d9ff"/>
+</svg>
