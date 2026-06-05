@@ -36,7 +36,7 @@ const standings: DriverStanding[] = [
     givenName: "Alex",
     familyName: "Driver",
     nationality: "British",
-    team: "Team A"
+    team: "Mercedes"
   },
   {
     id: "b",
@@ -47,7 +47,7 @@ const standings: DriverStanding[] = [
     givenName: "Blair",
     familyName: "Driver",
     nationality: "French",
-    team: "Team B"
+    team: "Ferrari"
   },
   {
     id: "c",
@@ -58,7 +58,7 @@ const standings: DriverStanding[] = [
     givenName: "Casey",
     familyName: "Driver",
     nationality: "German",
-    team: "Team C"
+    team: "McLaren"
   }
 ];
 
@@ -78,6 +78,10 @@ describe("HomeClient", () => {
     expect(screen.getByText("Alex Driver")).toBeInTheDocument();
     expect(screen.getByText("Blair Driver")).toBeInTheDocument();
     expect(screen.getByText("Casey Driver")).toBeInTheDocument();
+    expect(screen.getByText("AAA")).toHaveStyle("border-color: #00D2BE");
+    expect(screen.getByText("BBB")).toHaveStyle("border-color: #DC0000");
+    expect(screen.getByText("CCC")).toHaveStyle("border-color: #FF8000");
+    expect(screen.getAllByText("→")).toHaveLength(3);
     expect(screen.getByRole("link", { name: /Live Stats/i })).toHaveAttribute("href", "/standings");
     expect(screen.getByRole("link", { name: /Custom Cars/i })).toHaveAttribute("href", "/builder");
     expect(screen.getByRole("link", { name: /Interactive/i })).toHaveAttribute("href", "/calendar");
