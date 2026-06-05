@@ -327,7 +327,7 @@ export function F1CarScene({ config, shouldReduce }: SceneProps) {
         <Suspense
           fallback={
             <Html center>
-              <div className="rounded-full border border-white/15 bg-black/70 px-3 py-1 text-xs text-white/75 backdrop-blur">Loading local GLB</div>
+              <div className="rounded-full border border-white/15 bg-black/70 px-3 py-1 text-xs text-white/75 backdrop-blur">Preparing 360 chassis</div>
             </Html>
           }
         >
@@ -352,7 +352,7 @@ export function F1CarScene({ config, shouldReduce }: SceneProps) {
         />
       </Canvas>
       <div className="absolute bottom-3 right-3 rounded-full border border-white/20 bg-black/65 px-3 py-1 text-xs text-white/75 backdrop-blur">
-        360 F1 chassis
+        {modelReady ? "Imported 3D chassis" : "Built-in 360 chassis"}
       </div>
     </div>
   );
